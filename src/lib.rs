@@ -45,13 +45,31 @@ impl Config {
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     let url = format!(
-        "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies={}",
+        "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies={}&include_24hr_change=true",
         config.ids,
         config.vs_currencies
     );
     let res = reqwest::blocking::get(url)?
-            .json::<Prices>()?;
-    println!("res: {:?}", res);
+            .json::<SimplePrices>()?;
+    // println!("res: {:?}", res);
+    for prices in res {
+        println!("token id: {}", prices.0);
+        let price_info = prices.1.iter().map(|(key, value)| {
+            if key.ends_with("24h_change") {
+                return format!(
+                    "{}:{}\r\n",
+                    key,
+                    value
+                );
+            }
+            format!(
+                "vs_currency:{},price:{}\r\n",
+                key,
+                value
+            )
+        }).collect::<String>();
+        println!("{}", price_info);
+    }
     // let a = reqwest::Client::new().get("https://api.coingecko.com/api/v3/simple/price")
     // .query(&Config::get_query(config));
     Ok(())
