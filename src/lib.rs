@@ -1,18 +1,11 @@
 use std::collections::HashMap;
 use std::error::Error;
-use serde::{Serialize, Deserialize};
 use rust_decimal::Decimal;
 
 
 pub struct Config {
     pub ids: String,
     pub vs_currencies: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Prices {
-    #[serde(flatten)]
-    extra: SimplePrices,
 }
 
 pub type SimplePrices = HashMap<String, SimplePrice>;
