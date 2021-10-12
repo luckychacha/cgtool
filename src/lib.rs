@@ -1,7 +1,17 @@
 use std::collections::HashMap;
 use std::error::Error;
 use rust_decimal::Decimal;
+use serde::{Serialize, Deserialize};
 
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Token {
+    pub id: String,
+    pub symbol: String,
+    pub name: String,
+}
+
+pub type Tokens = Vec<Token>;
 
 pub struct Config {
     pub ids: String,
@@ -13,25 +23,52 @@ pub type SimplePrice = HashMap<String, Decimal>;
 
 impl Config {
     pub fn new(mut args: std::env::Args) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("need 2 parameters, first is ids, second is vs_currencies, comma-seperated.");
+        let parameter_nums = args.len();
+
+        if parameter_nums < 3 {
+            return Err("Need at least 2 parameters.");
+        }
+        
+        args.next();
+
+        let operate_type = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get operate type. id or price"),
+        };
+
+        if parameter_nums == 3 && "id" != operate_type {
+            return Err("Need 2 parameters to search ids, first is id, second is symbols[comma-seperated].")
         }
 
-        args.next();
+        if parameter_nums == 4 && "price" != operate_type {
+            return Err("Need 3 parameters to query price, first is price, second is ids[comma-seperated], third is vs_currencies[comma-seperated].")
+        }
+
         let ids = match args.next() {
             Some(arg) => arg,
             None => return Err("Didn't get ids"),
         };
 
-        let vs_currencies = match args.next() {
-            Some(arg) => arg,
-            None => return Err("Didn't get vs_currencies"),
-        };
+        if parameter_nums == 3 {
+            return Ok(Config {
+                ids,
+                vs_currencies: String::from("search-token"),
+            });
+        }
+        
+        if parameter_nums == 4 {
+            let vs_currencies = match args.next() {
+                Some(arg) => arg,
+                None => return Err("Didn't get vs_currencies"),
+            };
 
-        Ok(Config {
-            ids,
-            vs_currencies
-        })
+            return Ok(Config {
+                ids,
+                vs_currencies,
+            });
+        }
+
+        Err("Parameter error")
     }
 }
 
@@ -63,7 +100,24 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         }).collect::<String>();
         println!("{}", price_info);
     }
-    // let a = reqwest::Client::new().get("https://api.coingecko.com/api/v3/simple/price")
-    // .query(&Config::get_query(config));
     Ok(())
+}
+
+pub fn search_by_symbol(config: Config) -> Result<(), Box<dyn Error>> {
+    let url = "https://api.coingecko.com/api/v3/coins/list";
+    let res = reqwest::blocking::get(url)?
+            .json::<Tokens>()?;
+    let symbols: Vec<&str> = config.ids.split(",").collect();
+    let result: Vec<&Token> = res.iter().filter(|&token| {
+        symbols.contains(&token.symbol.as_str())
+    }).collect();
+    
+    let mut ids = Vec::<&str>::new();
+    for token in result {
+        println!("token id: [{}], symbol: [{}], name: [{}[", token.id, token.symbol, token.name);
+        ids.push(token.id.as_str());
+    }
+    println!("ids are: {}", ids.join(","));
+    Ok(())
+
 }
