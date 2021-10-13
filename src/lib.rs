@@ -114,7 +114,7 @@ pub fn search_by_symbol(config: Config) -> Result<(), Box<dyn Error>> {
     
     let mut ids = Vec::<&str>::new();
     for token in result {
-        println!("token id: [{}], symbol: [{}], name: [{}[", token.id, token.symbol, token.name);
+        println!("token id: [{}], symbol: [{}], name: [{}]", token.id, token.symbol, token.name);
         ids.push(token.id.as_str());
     }
     println!("ids are: {}", ids.join(","));
