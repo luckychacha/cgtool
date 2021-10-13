@@ -33,7 +33,7 @@ impl Config {
 
         let operate_type = match args.next() {
             Some(arg) => arg,
-            None => return Err("Didn't get operate type. id or price"),
+            None => return Err("Didn't get operate type. You can choose id or price"),
         };
 
         if parameter_nums == 3 && "id" != operate_type {
