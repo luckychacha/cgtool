@@ -24,7 +24,7 @@ pub enum Configs {
 //     }
 // }
 
-// pub fn query(config: impl Query) -> Result<(), Box<dyn Error>> {
+// pub fn query<T: Query>(config: T) -> Result<(), Box<dyn Error>> {
 //     Ok(())
 // }
 
