@@ -1,4 +1,5 @@
 use cgtool::{Configs, Query};
+// use cgtool::{query, PriceC};
 use std::process;
 
 fn main() {
@@ -6,6 +7,7 @@ fn main() {
         eprintln!("Problem parsing arguments: {}", message);
         process::exit(1);
     });
+    // query(config);
     if let Err(e) = config.query() {
         eprintln!("Application Error: {}", e);
         process::exit(1);

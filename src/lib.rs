@@ -17,6 +17,17 @@ pub enum Configs {
     Id { symbols: String },
 }
 
+// pub struct PriceC { ids: String, vs_currencies: String }
+// impl Query for PriceC {
+//     fn query(&self) -> Result<(), Box<dyn Error>> {
+//         todo!()
+//     }
+// }
+
+// pub fn query(config: impl Query) -> Result<(), Box<dyn Error>> {
+//     Ok(())
+// }
+
 pub trait Query {
     fn query(&self) -> Result<(), Box<dyn Error>>;
 }
