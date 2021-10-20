@@ -57,7 +57,7 @@ impl Query for Configs {
                     for item in detail {
                         println!("{}", item);
                     }
-                    println!("\r\n");
+                    println!("");
                 }
                 Ok(())
             }
