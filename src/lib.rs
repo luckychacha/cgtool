@@ -51,7 +51,7 @@ impl Query for Configs {
                                 if value.ge(&Decimal::ZERO) {
                                     return format!("📈{}:{}", key, value);
                                 }
-                                return format!(" 📉{}:{}", key, value);
+                                return format!("📉{}:{}", key, value);
                             }
                             format!("💰vs_currency:{},price:{}", key, value)
                         })
