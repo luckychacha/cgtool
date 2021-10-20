@@ -43,7 +43,7 @@ impl Query for Configs {
                 );
                 let res = reqwest::blocking::get(url)?.json::<SimplePrices>()?;
                 for prices in res {
-                    println!("token id: {}", prices.0);
+                    println!("⭐️token id: {}", prices.0);
                     let mut detail: Vec<String> = prices.1
                         .iter()
                         .map(|(key, value)| {
