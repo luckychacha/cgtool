@@ -48,9 +48,12 @@ impl Query for Configs {
                         .iter()
                         .map(|(key, value)| {
                             if key.ends_with("24h_change") {
-                                return format!("{}:{}", key, value);
+                                if value.ge(&Decimal::ZERO) {
+                                    return format!("📈{}:{}", key, value);
+                                }
+                                return format!(" 📉{}:{}", key, value);
                             }
-                            format!("vs_currency:{},price:{}", key, value)
+                            format!("💰vs_currency:{},price:{}", key, value)
                         })
                         .collect::<Vec<String>>();
                     detail.sort();
