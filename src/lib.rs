@@ -42,10 +42,8 @@ impl Query for Configs {
                     vs_currencies
                 );
                 let res = reqwest::blocking::get(url)?.json::<SimplePrices>()?;
-                // println!("res: {:?}", res);
                 for prices in res {
                     println!("token id: {}", prices.0);
-                    // let mut detail: Vec<String> = Vec::new();
                     let mut detail: Vec<String> = prices.1
                         .iter()
                         .map(|(key, value)| {
@@ -55,11 +53,11 @@ impl Query for Configs {
                             format!("vs_currency:{},price:{}", key, value)
                         })
                         .collect::<Vec<String>>();
-                    // detail.push(price_info);
                     detail.sort();
                     for item in detail {
                         println!("{}", item);
                     }
+                    println!("\r\n");
                 }
                 Ok(())
             }
