@@ -45,17 +45,21 @@ impl Query for Configs {
                 // println!("res: {:?}", res);
                 for prices in res {
                     println!("token id: {}", prices.0);
-                    let price_info = prices
-                        .1
+                    // let mut detail: Vec<String> = Vec::new();
+                    let mut detail: Vec<String> = prices.1
                         .iter()
                         .map(|(key, value)| {
                             if key.ends_with("24h_change") {
-                                return format!("{}:{}\r\n", key, value);
+                                return format!("{}:{}", key, value);
                             }
-                            format!("vs_currency:{},price:{}\r\n", key, value)
+                            format!("vs_currency:{},price:{}", key, value)
                         })
-                        .collect::<String>();
-                    println!("{}", price_info);
+                        .collect::<Vec<String>>();
+                    // detail.push(price_info);
+                    detail.sort();
+                    for item in detail {
+                        println!("{}", item);
+                    }
                 }
                 Ok(())
             }
