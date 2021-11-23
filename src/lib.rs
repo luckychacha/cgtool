@@ -49,7 +49,7 @@ impl TokenQuery {
     }
 }
 
-/// Query token price by token names. Such as `cgtool price-query bitcoin,ethereum usd,cny`
+/// Query token price by token names. Such as `cgtool price-query bitcoin,ethereum usd,cny true`
 #[derive(Parser, Debug)]
 pub struct PriceQuery {
     ids: String,
