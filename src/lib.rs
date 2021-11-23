@@ -85,11 +85,11 @@ impl PriceQuery {
                 .map(|(key, value)| {
                     if key.ends_with("24h_change") {
                         if value.ge(&Decimal::ZERO) {
-                            return format!("📈{}:{}", key, value);
+                            return format!("📈{}: {}", key, value);
                         }
-                        return format!("📉{}:{}", key, value);
+                        return format!("📉{}: {}", key, value);
                     }
-                    format!("💰vs_currency:{},price:{}", key, value)
+                    format!("💰vs_currency: {}, price: {}", key, value)
                 })
                 .collect::<Vec<String>>();
             detail.sort();
