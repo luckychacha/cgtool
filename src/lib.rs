@@ -1,7 +1,8 @@
+use anyhow::Result;
+use clap::Parser;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::error::Error;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Token {
@@ -17,123 +18,92 @@ pub enum Configs {
     Id { symbols: String },
 }
 
-// pub struct PriceC { ids: String, vs_currencies: String }
-// impl Query for PriceC {
-//     fn query(&self) -> Result<(), Box<dyn Error>> {
-//         todo!()
-//     }
-// }
-
-// pub fn query<T: Query>(config: T) -> Result<(), Box<dyn Error>> {
-//     Ok(())
-// }
-
-pub trait Query {
-    fn query(&self) -> Result<(), Box<dyn Error>>;
+/// Query token name by symbol. Such as `cgtool token-query btc`
+#[derive(Parser, Debug)]
+pub struct TokenQuery {
+    tokens: String,
 }
 
-impl Query for Configs {
-    fn query(&self) -> Result<(), Box<dyn Error>> {
-        match self {
-            Configs::Price { ids, vs_currencies } => {
-                let url = format!(
-                    "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies={}&include_24hr_change=true",
-                    ids,
-                    vs_currencies
-                );
-                let res = reqwest::blocking::get(url)?.json::<SimplePrices>()?;
-                for prices in res {
-                    println!("⭐️token id: {}", prices.0);
-                    let mut detail: Vec<String> = prices.1
-                        .iter()
-                        .map(|(key, value)| {
-                            if key.ends_with("24h_change") {
-                                if value.ge(&Decimal::ZERO) {
-                                    return format!("📈{}:{}", key, value);
-                                }
-                                return format!("📉{}:{}", key, value);
-                            }
-                            format!("💰vs_currency:{},price:{}", key, value)
-                        })
-                        .collect::<Vec<String>>();
-                    detail.sort();
-                    for item in detail {
-                        println!("{}", item);
-                    }
-                    println!("");
-                }
-                Ok(())
-            }
-            Configs::Id { symbols } => {
-                let url = "https://api.coingecko.com/api/v3/coins/list";
-                let res = reqwest::blocking::get(url)?.json::<Tokens>()?;
-                let symbols: Vec<&str> = symbols.split(',').collect();
-                let result: Vec<&Token> = res
-                    .iter()
-                    .filter(|&token| symbols.contains(&token.symbol.as_str()))
-                    .collect();
+impl TokenQuery {
+    pub fn query(&self) {
+        let url = "https://api.coingecko.com/api/v3/coins/list";
+        let res = reqwest::blocking::get(url)
+            .unwrap()
+            .json::<Tokens>()
+            .unwrap();
+        let symbols: Vec<&str> = self.tokens.split(',').collect();
+        let result: Vec<&Token> = res
+            .iter()
+            .filter(|&token| symbols.contains(&token.symbol.as_str()))
+            .collect();
 
-                let mut ids = Vec::<&str>::new();
-                for token in result {
-                    println!(
-                        "token id: [{}], symbol: [{}], name: [{}]",
-                        token.id, token.symbol, token.name
-                    );
-                    ids.push(token.id.as_str());
-                }
-                println!("ids are: {}", ids.join(","));
-                Ok(())
+        let mut ids = Vec::<&str>::new();
+        for token in result {
+            println!(
+                "token id: [{}], symbol: [{}], name: [{}]",
+                token.id, token.symbol, token.name
+            );
+            ids.push(token.id.as_str());
+        }
+        println!("ids are: {}", ids.join(","));
+    }
+}
+
+/// Query token price by token names. Such as `cgtool price-query bitcoin,ethereum usd,cny`
+#[derive(Parser, Debug)]
+pub struct PriceQuery {
+    ids: String,
+    vs_currencies: String,
+    #[clap(parse(try_from_str = parse_bool))]
+    include_24hr_change: bool,
+}
+
+impl PriceQuery {
+    pub fn query(&self) {
+        let url = match self.include_24hr_change {
+            true => format!(
+                "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies={}&include_24hr_change=true",
+                self.ids,
+                self.vs_currencies
+            ),
+            false => format!(
+                "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies={}&include_24hr_change=false",
+                self.ids,
+                self.vs_currencies
+            ),
+        };
+
+        let res = reqwest::blocking::get(url)
+            .unwrap()
+            .json::<SimplePrices>()
+            .unwrap();
+        for prices in res {
+            println!("⭐️token id: {}", prices.0);
+            let mut detail: Vec<String> = prices
+                .1
+                .iter()
+                .map(|(key, value)| {
+                    if key.ends_with("24h_change") {
+                        if value.ge(&Decimal::ZERO) {
+                            return format!("📈{}:{}", key, value);
+                        }
+                        return format!("📉{}:{}", key, value);
+                    }
+                    format!("💰vs_currency:{},price:{}", key, value)
+                })
+                .collect::<Vec<String>>();
+            detail.sort();
+            for item in detail {
+                println!("{}", item);
             }
+            println!("");
         }
     }
+}
+
+pub fn parse_bool(s: &str) -> Result<bool> {
+    Ok("true" == s)
 }
 
 pub type SimplePrices = HashMap<String, SimplePrice>;
 pub type SimplePrice = HashMap<String, Decimal>;
-
-impl Configs {
-    pub fn init(mut args: std::env::Args) -> Result<Configs, &'static str> {
-        let parameter_nums = args.len();
-
-        if parameter_nums < 3 {
-            return Err("Need at least 2 parameters.");
-        }
-
-        args.next();
-
-        let operate_type = match args.next() {
-            Some(arg) => arg,
-            None => return Err("Didn't get operate type. You can choose id or price"),
-        };
-
-        if parameter_nums == 3 && "id" != operate_type {
-            return Err(
-                "Need 2 parameters to search ids, first is id, second is symbols[comma-seperated].",
-            );
-        }
-
-        if parameter_nums == 4 && "price" != operate_type {
-            return Err("Need 3 parameters to query price, first is price, second is ids[comma-seperated], third is vs_currencies[comma-seperated].");
-        }
-
-        let ids = match args.next() {
-            Some(arg) => arg,
-            None => return Err("Didn't get ids"),
-        };
-
-        if parameter_nums == 3 {
-            return Ok(Configs::Id { symbols: ids });
-        }
-
-        if parameter_nums == 4 {
-            let vs_currencies = match args.next() {
-                Some(arg) => arg,
-                None => return Err("Didn't get vs_currencies"),
-            };
-
-            return Ok(Configs::Price { ids, vs_currencies });
-        }
-
-        Err("Parameter error")
-    }
-}

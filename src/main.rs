@@ -1,26 +1,24 @@
-use cgtool::{Configs, Query};
-// use cgtool::{query, PriceC};
-use std::process;
+use cgtool::{PriceQuery, TokenQuery};
+use clap::Parser;
+
+/// A simply tool to query token info.
+#[derive(Parser, Debug)]
+#[clap(version = "0.1", author = "Luckychacha <luckychachaa@gmail.com>")]
+pub struct Opts {
+    #[clap(subcommand)]
+    subcmd: SubCommand,
+}
+
+#[derive(Parser, Debug)]
+pub enum SubCommand {
+    TokenQuery(TokenQuery),
+    PriceQuery(PriceQuery),
+}
 
 fn main() {
-    let config: Configs = Configs::init(std::env::args()).unwrap_or_else(|message| {
-        eprintln!("Problem parsing arguments: {}", message);
-        process::exit(1);
-    });
-    // query(config);
-    if let Err(e) = config.query() {
-        eprintln!("Application Error: {}", e);
-        process::exit(1);
-    }
-    // if config.vs_currencies == "search-token" {
-    //     if let Err(e) = search_by_symbol(config) {
-    //         eprintln!("Application Error: {}", e);
-    //         process::exit(1);
-    //     }
-    // } else {
-    //     if let Err(e) = run(config) {
-    //         eprintln!("Application Error: {}", e);
-    //         process::exit(1);
-    //     }
-    // }
+    let opts = Opts::parse();
+    match opts.subcmd {
+        SubCommand::TokenQuery(ref args) => args.query(),
+        SubCommand::PriceQuery(ref args) => args.query(),
+    };
 }
