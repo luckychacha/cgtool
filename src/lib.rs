@@ -1,5 +1,7 @@
-use anyhow::Result;
+mod error;
+
 use clap::Parser;
+use reqwest::blocking::Response;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -27,25 +29,66 @@ pub struct TokenQuery {
 impl TokenQuery {
     pub fn query(&self) {
         let url = "https://api.coingecko.com/api/v3/coins/list";
-        let res = reqwest::blocking::get(url)
-            .unwrap()
-            .json::<Tokens>()
-            .unwrap();
-        let symbols: Vec<&str> = self.tokens.split(',').collect();
-        let result: Vec<&Token> = res
-            .iter()
-            .filter(|&token| symbols.contains(&token.symbol.as_str()))
-            .collect();
+        let interface_response = Self::get_data(url);
+        match interface_response {
+            Ok(response) => {
+                let res = Self::parse_tokens(response);
+                let symbols: Vec<&str> = self.tokens.split(',').collect();
+                match res {
+                    Ok(tokens) => {
+                        let result: Vec<&Token> = tokens
+                            .iter()
+                            .filter(|&token| symbols.contains(&token.symbol.as_str()))
+                            .collect();
 
-        let mut ids = Vec::<&str>::new();
-        for token in result {
-            println!(
-                "token id: [{}], symbol: [{}], name: [{}]",
-                token.id, token.symbol, token.name
-            );
-            ids.push(token.id.as_str());
+                        let mut ids = Vec::<&str>::new();
+                        for token in result {
+                            println!(
+                                "token id: [{}], symbol: [{}], name: [{}]",
+                                token.id, token.symbol, token.name
+                            );
+                            ids.push(token.id.as_str());
+                        }
+                        println!("ids are: {}", ids.join(","));
+                    },
+                    Err(error) => {
+                        println!("解析失败：{error}");
+                    },
+                }
+                
+            },
+            Err(error) => {
+                println!("{error}");
+            },
         }
-        println!("ids are: {}", ids.join(","));
+    }
+
+    fn get_data(url: &str) -> Result<reqwest::blocking::Response, error::CgtoolError> {
+        let res: Result<reqwest::blocking::Response, reqwest::Error> = reqwest::blocking::get(url);
+
+        match res {
+            Ok(response) => {
+                return Ok(response);
+            },
+            Err(err) => {
+                return Err(error::CgtoolError::GetDataError {
+                    url: url.to_string(),
+                    error: err
+                });
+            },
+        }
+    }
+
+    fn parse_tokens(response: Response) -> Result<Tokens, error::CgtoolError> {
+        match response.json::<Tokens>() {
+            Ok(tokens) => {
+                return Ok(tokens);
+            },
+            Err(_) => {
+                return Err(error::CgtoolError::JsonParseError);
+            },
+        }
+        
     }
 }
 
@@ -101,7 +144,7 @@ impl PriceQuery {
     }
 }
 
-pub fn parse_bool(s: &str) -> Result<bool> {
+pub fn parse_bool(s: &str) -> Result<bool, error::CgtoolError> {
     Ok("true" == s)
 }
 
