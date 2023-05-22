@@ -27,40 +27,20 @@ pub struct TokenQuery {
 }
 
 impl TokenQuery {
-    pub fn query(&self) {
+    pub fn query(&self) -> Result<(), error::CgtoolError> {
         let url = "https://api.coingecko.com/api/v3/coins/list";
-        let interface_response = Self::get_data(url);
-        match interface_response {
-            Ok(response) => {
-                let res = Self::parse_tokens(response);
-                let symbols: Vec<&str> = self.tokens.split(',').collect();
-                match res {
-                    Ok(tokens) => {
-                        let result: Vec<&Token> = tokens
-                            .iter()
-                            .filter(|&token| symbols.contains(&token.symbol.as_str()))
-                            .collect();
-
-                        let mut ids = Vec::<&str>::new();
-                        for token in result {
-                            println!(
-                                "token id: [{}], symbol: [{}], name: [{}]",
-                                token.id, token.symbol, token.name
-                            );
-                            ids.push(token.id.as_str());
-                        }
-                        println!("ids are: {}", ids.join(","));
-                    },
-                    Err(error) => {
-                        println!("解析失败：{error}");
-                    },
-                }
-                
-            },
-            Err(error) => {
-                println!("{error}");
-            },
-        }
+        let response = Self::get_data(url)?;
+        let symbols: Vec<&str> = self.tokens.split(',').collect();
+        Self::parse_tokens(response)?
+            .iter()
+            .filter(|&token| symbols.contains(&token.symbol.as_str()))
+            .for_each(|token| {
+                println!(
+                    "token id: [{}], symbol: [{}], name: [{}]",
+                    token.id, token.symbol, token.name
+                );
+            });
+        Ok(())
     }
 
     fn get_data(url: &str) -> Result<reqwest::blocking::Response, error::CgtoolError> {
@@ -69,13 +49,13 @@ impl TokenQuery {
         match res {
             Ok(response) => {
                 return Ok(response);
-            },
+            }
             Err(err) => {
                 return Err(error::CgtoolError::GetDataError {
                     url: url.to_string(),
-                    error: err
+                    error: err,
                 });
-            },
+            }
         }
     }
 
@@ -83,12 +63,11 @@ impl TokenQuery {
         match response.json::<Tokens>() {
             Ok(tokens) => {
                 return Ok(tokens);
-            },
+            }
             Err(_) => {
                 return Err(error::CgtoolError::JsonParseError);
-            },
+            }
         }
-        
     }
 }
 
@@ -101,8 +80,32 @@ pub struct PriceQuery {
     include_24hr_change: bool,
 }
 
+pub struct TokenItem {
+    key: String,
+    value: Decimal,
+}
+
+impl From<(&String, &Decimal)> for TokenItem {
+    fn from(value: (&String, &Decimal)) -> Self {
+        Self {
+            key: value.0.clone(),
+            value: value.1.clone(),
+        }
+    }
+}
+
+impl std::fmt::Display for TokenItem {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.key.ends_with("24h_change") {
+            true if self.value.ge(&Decimal::ZERO) => writeln!(f, "📈{}: {}", self.key, self.value),
+            true => writeln!(f, "📉{}: {}", self.key, self.value),
+            false => write!(f, "💰vs_currency: {}, price: {}", self.key, self.value),
+        }
+    }
+}
+
 impl PriceQuery {
-    pub fn query(&self) {
+    pub fn query(&self) -> Result<(), error::CgtoolError> {
         let url = match self.include_24hr_change {
             true => format!(
                 "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies={}&include_24hr_change=true",
@@ -122,25 +125,17 @@ impl PriceQuery {
             .unwrap();
         for prices in res {
             println!("⭐️token id: {}", prices.0);
-            let mut detail: Vec<String> = prices
+            let mut detail = prices
                 .1
                 .iter()
-                .map(|(key, value)| {
-                    if key.ends_with("24h_change") {
-                        if value.ge(&Decimal::ZERO) {
-                            return format!("📈{}: {}", key, value);
-                        }
-                        return format!("📉{}: {}", key, value);
-                    }
-                    format!("💰vs_currency: {}, price: {}", key, value)
-                })
+                .map(|item| format!("{}", Into::<TokenItem>::into(item)))
                 .collect::<Vec<String>>();
             detail.sort();
             for item in detail {
                 println!("{}", item);
             }
-            println!("");
         }
+        Ok(())
     }
 }
 

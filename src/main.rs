@@ -17,8 +17,18 @@ pub enum SubCommand {
 
 fn main() {
     let opts = Opts::parse();
-    match opts.subcmd {
-        SubCommand::TokenQuery(ref args) => args.query(),
-        SubCommand::PriceQuery(ref args) => args.query(),
+    let _ = match opts.subcmd {
+        SubCommand::TokenQuery(ref args) => args
+            .query()
+            .map_err(|e| {
+                println!("token query error: {e}");
+            })
+            .map(|_| println!("token query success.")),
+        SubCommand::PriceQuery(ref args) => args
+            .query()
+            .map_err(|e| {
+                println!("price query error: {e}");
+            })
+            .map(|_| println!("price query success.")),
     };
 }
