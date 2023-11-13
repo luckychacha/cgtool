@@ -1,10 +1,12 @@
 mod error;
+mod types;
 
 use clap::Parser;
 use reqwest::blocking::Response;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+pub use types::market_cap::MarketCapQuery;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Token {

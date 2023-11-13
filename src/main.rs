@@ -1,4 +1,4 @@
-use cgtool::{PriceQuery, TokenQuery};
+use cgtool::{MarketCapQuery, PriceQuery, TokenQuery};
 use clap::Parser;
 
 /// A simply tool to query token info.
@@ -13,9 +13,11 @@ pub struct Opts {
 pub enum SubCommand {
     TokenQuery(TokenQuery),
     PriceQuery(PriceQuery),
+    MarketCap(MarketCapQuery),
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let opts = Opts::parse();
     let _ = match opts.subcmd {
         SubCommand::TokenQuery(ref args) => args
@@ -26,6 +28,13 @@ fn main() {
             .map(|_| println!("token query success.")),
         SubCommand::PriceQuery(ref args) => args
             .query()
+            .map_err(|e| {
+                println!("price query error: {e}");
+            })
+            .map(|_| println!("price query success.")),
+        SubCommand::MarketCap(ref args) => args
+            .query()
+            .await
             .map_err(|e| {
                 println!("price query error: {e}");
             })

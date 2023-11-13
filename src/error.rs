@@ -16,4 +16,7 @@ pub enum CgtoolError {
 
     #[error("获取响应失败！")]
     ResponseTextGetFailed,
+
+    #[error("Error from Reqwest: {0}")]
+    ReqwestError(#[from] reqwest::Error),
 }
