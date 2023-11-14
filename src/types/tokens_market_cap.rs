@@ -10,8 +10,8 @@ pub struct TokensMarketCap {
 }
 
 impl TokensMarketCap {
+
     pub fn query(&self) -> Result<(), error::CgtoolError> {
-        println!("{:?}", self);
-        Ok(())
+        todo!()
     }
 }
