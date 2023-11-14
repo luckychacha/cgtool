@@ -30,7 +30,7 @@ impl Display for TokenMarketCap {
 }
 
 impl MarketCapQuery {
-    pub async fn query(&self) -> Result<(), error::CgtoolError> {
+    fn get_api_query_params(&self) -> (u32, u32, &str) {
         let page = if self.market_cap_rank % 20 == 0 {
             self.market_cap_rank / 20
         } else {
@@ -40,11 +40,10 @@ impl MarketCapQuery {
         // index in current page
         let rank_id = self.market_cap_rank - (page - 1) * 20 - 1;
 
-        let vs_currencies = if let Some(vs_currencies) = &self.vs_currencies {
-            vs_currencies
-        } else {
-            "usd"
-        };
+        (page, rank_id, self.vs_currencies.as_deref().unwrap_or("usd"))
+    }
+    pub async fn query(&self) -> Result<(), error::CgtoolError> {
+        let (page, rank_id, vs_currencies) = self.get_api_query_params();
 
         let url = format!("https://api.coingecko.com/api/v3/coins/markets?vs_currency={}&order=market_cap_desc&per_page=20&page={}", vs_currencies, page);
         println!("url: {}", url);
