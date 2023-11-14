@@ -50,7 +50,7 @@ impl MarketCapQuery {
         println!("url: {}", url);
         let response = Self::get_data(&url).await?;
         if let Ok(token_market_cap_info) = Self::parse_result(response, rank_id as usize).await {
-            println!("{:?}", token_market_cap_info);
+            println!("{token_market_cap_info}");
         }
 
         Ok(())
