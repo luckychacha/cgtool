@@ -22,12 +22,13 @@ OPTIONS:
 
 SUBCOMMANDS:
     help                Print this message or the help of the given subcommand(s)
-    market-cap          Find out which token ranks n-th in terms of market cap. Such as `cgtool market-cap 100 jpy` or `cgtool market-cap 100`, default vs_currency is usd
+    market-cap          Find out which token ranks n-th in terms of market cap. Such as `cgtool
+                        market-cap 100 jpy` or `cgtool market-cap 100`, default vs_currency is
+                        usd    
     price-query         Query token price by token names. Such as `cgtool price-query
                         bitcoin,ethereum usd,cny true`
     token-market-cap    Query the market cap of a specified tokens.
     token-query         Query token name by symbol. Such as `cgtool token-query btc`
-
 ```
 
 ## Project Status

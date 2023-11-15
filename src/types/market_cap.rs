@@ -4,8 +4,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-/// Find out which token ranks n-th in terms of market cap. Such as `cgtool market-cap 100 jpy`
-/// or `cgtool market-cap 100`, default vs_currency is usd
+/// Find out which token ranks n-th in terms of market cap. Such as `cgtool market-cap 100 jpy` or `cgtool market-cap 100`, default vs_currency is usd
 #[derive(Parser, Debug)]
 pub struct MarketCapQuery {
     /// 5, 10, 125, etc
