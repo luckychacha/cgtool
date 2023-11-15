@@ -1,5 +1,7 @@
+use std::sync::Arc;
 use cgtool::{MarketCapQuery, PriceQuery, TokenQuery, TokensMarketCap};
 use clap::Parser;
+use reqwest::Client;
 
 /// A simply tool to query token info.
 #[derive(Parser, Debug)]
@@ -19,6 +21,7 @@ pub enum SubCommand {
 
 #[tokio::main]
 async fn main() {
+    let client = Arc::new(Client::new());
     let opts = Opts::parse();
     let _ = match opts.subcmd {
         SubCommand::TokenQuery(ref args) => args
@@ -34,7 +37,7 @@ async fn main() {
             })
             .map(|_| println!("price query success.")),
         SubCommand::MarketCap(ref args) => args
-            .query()
+            .query(&client)
             .await
             .map_err(|e| {
                 println!("market cap query error: {e}");

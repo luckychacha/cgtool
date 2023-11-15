@@ -1,9 +1,11 @@
-use std::fmt::Display;
-use clap::Parser;
-use reqwest::Response;
-use serde::{Deserialize, Serialize};
 use crate::error;
+use clap::Parser;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
+/// Find out which token ranks n-th in terms of market cap. Such as `cgtool market-cap 100 jpy`
+/// or `cgtool market-cap 100`, default vs_currency is usd
 #[derive(Parser, Debug)]
 pub struct MarketCapQuery {
     /// 5, 10, 125, etc
@@ -20,6 +22,27 @@ pub struct TokenMarketCap {
     market_cap_rank: u32,
 }
 
+type MarketCapQueryParams<'a> = (u32, usize, &'a str);
+
+impl<'a> From<&'a MarketCapQuery> for MarketCapQueryParams<'a> {
+    fn from(market_cap_query: &'a MarketCapQuery) -> Self {
+        let page = if market_cap_query.market_cap_rank % PAGE_SIZE == 0 {
+            market_cap_query.market_cap_rank / PAGE_SIZE
+        } else {
+            market_cap_query.market_cap_rank / PAGE_SIZE + 1
+        };
+        let rank_id = market_cap_query.market_cap_rank - (page - 1) * PAGE_SIZE - 1;
+
+        (
+            page,
+            rank_id as usize,
+            market_cap_query.vs_currencies.as_deref().unwrap_or("usd"),
+        )
+    }
+}
+
+const PAGE_SIZE: u32 = 20;
+
 impl Display for TokenMarketCap {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "🆔token id: {}", self.id)?;
@@ -30,63 +53,33 @@ impl Display for TokenMarketCap {
 }
 
 impl MarketCapQuery {
-    fn get_api_query_params(&self) -> (u32, u32, &str) {
-        let page = if self.market_cap_rank % 20 == 0 {
-            self.market_cap_rank / 20
-        } else {
-            self.market_cap_rank / 20 + 1
-        };
-
-        // index in current page
-        let rank_id = self.market_cap_rank - (page - 1) * 20 - 1;
-
-        (page, rank_id, self.vs_currencies.as_deref().unwrap_or("usd"))
-    }
-    pub async fn query(&self) -> Result<(), error::CgtoolError> {
-        let (page, rank_id, vs_currencies) = self.get_api_query_params();
-
-        let url = format!("https://api.coingecko.com/api/v3/coins/markets?vs_currency={}&order=market_cap_desc&per_page=20&page={}", vs_currencies, page);
-        println!("url: {}", url);
-        let response = Self::get_data(&url).await?;
-        if let Ok(token_market_cap_info) = Self::parse_result(response, rank_id as usize).await {
-            println!("{token_market_cap_info}");
-        }
-
-        Ok(())
+    pub async fn query(&self, client: &Client) -> Result<(), error::CgtoolError> {
+        self.query_market_cap(client).await
     }
 
-    async fn get_data(url: &str) -> Result<Response, error::CgtoolError> {
-        let client = reqwest::Client::new();
+    async fn query_market_cap(&self, client: &Client) -> Result<(), error::CgtoolError> {
+        let (page, rank_id, vs_currency): MarketCapQueryParams = self.into();
 
-        // let resp = client.get(url).header("accept", "application/json")
-        //     .header("user-agent", "C")
-        //     .send().await?
-        //     .json::<Vec<TokenMarketCap>>()
-        //     .await?;
-        // println!("resp: {:?}", resp);
+        let url = format!("https://api.coingecko.com/api/v3/coins/markets?vs_currency={}&order=market_cap_desc&per_page={}&page={}", vs_currency, PAGE_SIZE, page);
 
-        let resp = client.get(url).header("accept", "application/json")
+        match client
+            .get(url)
+            .header("accept", "application/json")
             .header("user-agent", "C")
-            .send().await?;
-        Ok(resp)
-    }
-
-    async fn parse_result(response: Response, rank_id: usize) -> Result<TokenMarketCap, error::CgtoolError> {
-        match response.json::<Vec<TokenMarketCap>>().await {
+            .send()
+            .await?
+            .json::<Vec<TokenMarketCap>>()
+            .await
+        {
             Ok(tokens) => {
                 if let Some(token_market_cap) = tokens.get(rank_id) {
-                    Ok(TokenMarketCap {
-                        id: token_market_cap.id.clone(),
-                        market_cap: token_market_cap.market_cap,
-                        market_cap_rank: token_market_cap.market_cap_rank,
-                    })
+                    println!("{token_market_cap}");
+                    Ok(())
                 } else {
                     Err(error::CgtoolError::JsonParseError)
                 }
             }
-            Err(_) => {
-                Err(error::CgtoolError::JsonParseError)
-            }
+            Err(_) => Err(error::CgtoolError::JsonParseError),
         }
     }
 }
