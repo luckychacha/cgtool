@@ -1,7 +1,7 @@
-use std::sync::Arc;
 use cgtool::{MarketCapQuery, PriceQuery, TokenQuery, TokensMarketCap};
 use clap::Parser;
 use reqwest::Client;
+use std::sync::Arc;
 
 /// A simply tool to query token info.
 #[derive(Parser, Debug)]
@@ -31,7 +31,8 @@ async fn main() {
             })
             .map(|_| println!("token query success.")),
         SubCommand::PriceQuery(ref args) => args
-            .query()
+            .query(&client)
+            .await
             .map_err(|e| {
                 println!("price query error: {e}");
             })
@@ -48,6 +49,6 @@ async fn main() {
             .map_err(|e| {
                 println!("token market cap query error: {e}");
             })
-            .map(|_| println!("token market cap query success."))
+            .map(|_| println!("token market cap query success.")),
     };
 }

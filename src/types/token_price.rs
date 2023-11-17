@@ -1,8 +1,9 @@
-use std::collections::HashMap;
-use clap::Parser;
-use rust_decimal::Decimal;
 use crate::error;
 use crate::types::parse_bool;
+use clap::Parser;
+use reqwest::Client;
+use rust_decimal::Decimal;
+use std::collections::HashMap;
 
 pub type SimplePrices = HashMap<String, SimplePrice>;
 pub type SimplePrice = HashMap<String, Decimal>;
@@ -15,8 +16,6 @@ pub struct PriceQuery {
     #[clap(parse(try_from_str = parse_bool))]
     include_24hr_change: bool,
 }
-
-
 
 pub struct TokenItem {
     key: String,
@@ -43,7 +42,7 @@ impl std::fmt::Display for TokenItem {
 }
 
 impl PriceQuery {
-    pub fn query(&self) -> Result<(), error::CgtoolError> {
+    pub async fn query(&self, client: &Client) -> Result<(), error::CgtoolError> {
         let url = match self.include_24hr_change {
             true => format!(
                 "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies={}&include_24hr_change=true",
@@ -57,10 +56,14 @@ impl PriceQuery {
             ),
         };
 
-        let res = reqwest::blocking::get(url)
-            .unwrap()
+        let res = client
+            .get(url)
+            .header("accept", "application/json")
+            .header("user-agent", "C")
+            .send()
+            .await?
             .json::<SimplePrices>()
-            .unwrap();
+            .await?;
         for prices in res {
             println!("⭐️token id: {}", prices.0);
             let mut detail = prices
