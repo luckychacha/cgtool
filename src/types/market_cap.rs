@@ -1,6 +1,5 @@
-use crate::error;
+use crate::{error, MyClient};
 use clap::Parser;
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
@@ -52,19 +51,17 @@ impl Display for TokenMarketCap {
 }
 
 impl MarketCapQuery {
-    pub async fn query(&self, client: &Client) -> Result<(), error::CgtoolError> {
+    pub async fn query(&self, client: &MyClient) -> Result<(), error::CgtoolError> {
         self.query_market_cap(client).await
     }
 
-    async fn query_market_cap(&self, client: &Client) -> Result<(), error::CgtoolError> {
+    async fn query_market_cap(&self, client: &MyClient) -> Result<(), error::CgtoolError> {
         let (page, rank_id, vs_currency): MarketCapQueryParams = self.into();
 
         let url = format!("https://api.coingecko.com/api/v3/coins/markets?vs_currency={}&order=market_cap_desc&per_page={}&page={}", vs_currency, PAGE_SIZE, page);
 
         match client
-            .get(url)
-            .header("accept", "application/json")
-            .header("user-agent", "C")
+            .get_builder(url)
             .send()
             .await?
             .json::<Vec<TokenMarketCap>>()

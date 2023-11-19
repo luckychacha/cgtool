@@ -1,4 +1,4 @@
-use cgtool::{MarketCapQuery, PriceQuery, TokenQuery, TokensMarketCap};
+use cgtool::{MarketCapQuery, MyClient, PriceQuery, TokenQuery, TokensMarketCap};
 use clap::Parser;
 use reqwest::Client;
 use std::sync::Arc;
@@ -21,7 +21,9 @@ pub enum SubCommand {
 
 #[tokio::main]
 async fn main() {
-    let client = Arc::new(Client::new());
+    let client = Arc::new(MyClient {
+        inner: Client::new(),
+    });
     let opts = Opts::parse();
     let _ = match opts.subcmd {
         SubCommand::TokenQuery(ref args) => args

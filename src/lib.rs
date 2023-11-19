@@ -2,10 +2,8 @@ mod error;
 mod types;
 
 pub use types::{
-    market_cap::MarketCapQuery,
-    token_price::PriceQuery,
-    token::TokenQuery,
-    tokens_market_cap::TokensMarketCap,
+    market_cap::MarketCapQuery, token::TokenQuery, token_price::PriceQuery,
+    tokens_market_cap::TokensMarketCap, MyClient,
 };
 
 pub enum Configs {
