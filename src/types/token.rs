@@ -1,7 +1,7 @@
 use crate::{error, MyClient};
 use clap::Parser;
-use reqwest::blocking::Response;
-use reqwest::Client;
+
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
