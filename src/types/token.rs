@@ -1,7 +1,8 @@
+use crate::{error, MyClient};
 use clap::Parser;
 use reqwest::blocking::Response;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use crate::error;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Token {
@@ -19,11 +20,16 @@ pub struct TokenQuery {
 }
 
 impl TokenQuery {
-    pub fn query(&self) -> Result<(), error::CgtoolError> {
+    pub async fn query(&self, client: &MyClient) -> Result<(), error::CgtoolError> {
         let url = "https://api.coingecko.com/api/v3/coins/list";
-        let response = Self::get_data(url)?;
+        let tokens = client
+            .get_builder(url.into())
+            .send()
+            .await?
+            .json::<Tokens>()
+            .await?;
         let symbols: Vec<&str> = self.tokens.split(',').collect();
-        Self::parse_tokens(response)?
+        tokens
             .iter()
             .filter(|&token| symbols.contains(&token.symbol.as_str()))
             .for_each(|token| {
@@ -33,32 +39,5 @@ impl TokenQuery {
                 );
             });
         Ok(())
-    }
-
-    fn get_data(url: &str) -> Result<reqwest::blocking::Response, error::CgtoolError> {
-        let res: Result<reqwest::blocking::Response, reqwest::Error> = reqwest::blocking::get(url);
-
-        match res {
-            Ok(response) => {
-                Ok(response)
-            }
-            Err(err) => {
-                Err(error::CgtoolError::GetDataError {
-                    url: url.to_string(),
-                    error: err,
-                })
-            }
-        }
-    }
-
-    fn parse_tokens(response: Response) -> Result<Tokens, error::CgtoolError> {
-        match response.json::<Tokens>() {
-            Ok(tokens) => {
-                Ok(tokens)
-            }
-            Err(_) => {
-                Err(error::CgtoolError::JsonParseError)
-            }
-        }
     }
 }
