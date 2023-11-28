@@ -10,6 +10,9 @@
 - Quick and efficient access to comprehensive cryptocurrency data.
 
 ## Usage
+
+0. `cargo build --release` to get the `cgtool`.
+
 To use `cgtool`, run the following commands depending on the information you seek:
 
 ```bash

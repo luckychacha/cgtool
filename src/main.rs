@@ -29,7 +29,8 @@ async fn main() {
     let opts = Opts::parse();
     let _ = match opts.subcmd {
         SubCommand::TokenQuery(ref args) => args
-            .query()
+            .query(&client)
+            .await
             .map_err(|e| {
                 println!("token query error: {e}");
             })
