@@ -1,4 +1,4 @@
-use cgtool::{MarketCapQuery, MyClient, PriceQuery, TokenQuery, TokensMarketCap};
+use cgtool::{EthPrivateKey, MarketCapQuery, MyClient, PriceQuery, TokenQuery, TokensMarketCap};
 use clap::Parser;
 use reqwest::Client;
 use std::sync::Arc;
@@ -11,12 +11,14 @@ pub struct Opts {
     subcmd: SubCommand,
 }
 
+
 #[derive(Parser, Debug)]
 pub enum SubCommand {
     TokenQuery(TokenQuery),
     PriceQuery(PriceQuery),
     MarketCap(MarketCapQuery),
     TokenMarketCap(TokensMarketCap),
+    EthAddressGenerator(EthPrivateKey),
 }
 
 #[tokio::main]
@@ -52,5 +54,11 @@ async fn main() {
                 println!("token market cap query error: {e}");
             })
             .map(|_| println!("token market cap query success.")),
+        SubCommand::EthAddressGenerator(ref args) => args
+            .generate()
+            .map_err(|e| {
+                println!("eth address generator error: {e}");
+            })
+            .map(|_| println!("eth address generator success.")
     };
 }

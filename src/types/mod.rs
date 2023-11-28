@@ -2,6 +2,7 @@ use crate::error;
 use reqwest::Client;
 use std::ops::Deref;
 
+pub mod eth_address;
 pub mod market_cap;
 pub mod token;
 pub mod token_price;
