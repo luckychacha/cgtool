@@ -1,7 +1,6 @@
 use crate::{error, MyClient};
 use clap::Parser;
 
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]

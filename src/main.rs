@@ -11,7 +11,6 @@ pub struct Opts {
     subcmd: SubCommand,
 }
 
-
 #[derive(Parser, Debug)]
 pub enum SubCommand {
     TokenQuery(TokenQuery),
@@ -55,11 +54,5 @@ async fn main() {
                 println!("token market cap query error: {e}");
             })
             .map(|_| println!("token market cap query success.")),
-        SubCommand::EthAddressGenerator(ref args) => args
-            .generate()
-            .map_err(|e| {
-                println!("eth address generator error: {e}");
-            })
-            .map(|_| println!("eth address generator success.")
     };
 }

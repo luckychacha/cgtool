@@ -1,5 +1,5 @@
-use clap::Parser;
 use crate::error;
+use clap::Parser;
 
 #[derive(Parser, Debug)]
 pub struct TokensMarketCap {
@@ -10,7 +10,6 @@ pub struct TokensMarketCap {
 }
 
 impl TokensMarketCap {
-
     pub fn query(&self) -> Result<(), error::CgtoolError> {
         todo!()
     }
