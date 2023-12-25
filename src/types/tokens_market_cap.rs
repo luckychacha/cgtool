@@ -1,4 +1,4 @@
-use crate::error;
+use crate::{error, MyClient};
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -10,7 +10,7 @@ pub struct TokensMarketCap {
 }
 
 impl TokensMarketCap {
-    pub fn query(&self) -> Result<(), error::CgtoolError> {
+    pub fn query(&self, _client: &MyClient) -> Result<(), error::CgtoolError> {
         todo!()
     }
 }

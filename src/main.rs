@@ -49,7 +49,7 @@ async fn main() {
             })
             .map(|_| println!("price query success.")),
         SubCommand::TokenMarketCap(ref args) => args
-            .query()
+            .query(&client)
             .map_err(|e| {
                 println!("token market cap query error: {e}");
             })
