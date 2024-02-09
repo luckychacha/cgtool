@@ -11,7 +11,7 @@
 
 ## Usage
 
-0. `cargo build --release` to get the `cgtool` binary.
+0. `cargo build --release` to build the `cgtool` binary.
 
 To use `cgtool`, run the following commands depending on the information you seek:
 
