@@ -1,7 +1,7 @@
 # cgtool
 
 ## Project Description
-`cgtool` is a command-line tool developed in Rust, using the [clap](https://github.com/clap-rs/clap) library to interface with CoinGecko's API. It offers a range of commands for quick access to market cap rankings, real-time prices, and market data of specific tokens, making the analysis and retrieval of cryptocurrency data more direct and efficient.
+`cgtool` is a command-line tool developed in Rust, using the [clap](https://github.com/clap-rs/clap) library to wrap the CoinGecko's API. It offers a range of commands for quick access to market cap rankings, real-time prices, and market data of specific tokens, making the analysis and retrieval of cryptocurrency data more direct and efficient.
 
 ## Features
 - Retrieve real-time price data for a wide range of cryptocurrencies.
